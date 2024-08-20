@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>SpaceX Viewshed Analysis | ArcGIS Maps SDK for JavaScript 4.30</title>
+  <style>
+    html, body, #viewDiv {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #viewshedComponent {
+      width: 270px;
+    }
+    #viewshedComponent calcite-button {
+      display: flex;
+    }
+    #promptText {
+      margin-top: 0.4rem;
+    }
+  </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <script type="module" src="https://js.arcgis.com/calcite-components/2.8.5/calcite.esm.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.8.5/calcite.css" />
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/geometry/SpatialReference",
+      "esri/core/reactiveUtils",
+      "esri/analysis/ViewshedAnalysis",
+      "esri/analysis/Viewshed",
+      "esri/layers/IntegratedMeshLayer",
+      "esri/layers/FeatureLayer"
+    ], function (
+      Map,
+      SceneView,
+      SpatialReference,
+      reactiveUtils,
+      ViewshedAnalysis,
+      Viewshed,
+      IntegratedMeshLayer,
+      FeatureLayer
+    ) {
+
+
+        const featureLayer = new FeatureLayer({
+        url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Exterior_Geodesic_Viewshed_Model_WSL2/FeatureServer/8"
+    });
+
+    
+
+      const view = new SceneView({
+        container: "viewDiv",
+        camera: {
+          position: {
+            x: -97.4079397,
+            y: 30.1551083,
+            z: 995.4546383377165
+          },
+          heading: 1.2311944909542853,
+          tilt: 60
+        },
+        map: new Map({
+          basemap: "arcgis/imagery",
+          ground: "world-elevation",
+          layers: [
+            new IntegratedMeshLayer({
+              url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer"
+            }),
+            featureLayer
+          ]
+        }),
+      });
+
+   // Controller which allows to cancel an ongoing viewshed creation operation.
+   let abortController = null;
+
+    // Create a new abort controller for the new operation.
+    abortController = new AbortController();
+
+      view.when(async () => {
+        featureLayer.queryFeatures().then(function(response) {
+            const features = response.features;
+
+            features.forEach(function(feature) {
+                // Access feature attributes and geometry
+                console.log(feature.attributes);
+                console.log(feature.geometry);
+
+                const viewshed = new Viewshed({
+                    observer: {
+                    x: feature.attributes.x,
+                    y: feature.attributes.y,
+                    z: 65 + feature.attributes.locationheight
+                    },
+                    farDistance: 150,
+                    tilt: feature.attributes.camerapitch,
+                    heading: feature.attributes.cameraheading,
+                    horizontalFieldOfView: feature.attributes.horizontalfieldofview,
+                    verticalFieldOfView: feature.attributes.verticalfieldofview
+          });
+
+          const viewshedAnalysis = new ViewshedAnalysis({ viewsheds: [viewshed] });
+          view.analyses.add(viewshedAnalysis);
+
+                
+          view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
+            analysisView.interactive = true;
+            analysisView.selectedViewshed = viewshed;
+
+            // reactiveUtils.when(
+            //   () => viewshedAnalysis.viewsheds.length > 0 && analysisView.selectedViewshed,
+            //   () => {
+            //     stopCreating();
+            //     updateUI();
+
+        
+            //   }
+            // );
+
+            // analysisView.createViewsheds(abortController)
+            //   .catch((e) => {
+            //     if (!promiseUtils.isAbortError(e)) {
+            //       throw e;
+            //     }
+            //   })
+
+              })
+              }); //Forloop end
+
+        });
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html>
