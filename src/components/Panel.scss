@@ -1,0 +1,62 @@
+.panel {
+    position: absolute;
+    top: 0;
+    background-color: var(--background-color-medium);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+
+    &.left {
+      left: 0;
+      
+      .collapse-button {
+        right: 5px;
+        left: auto; 
+      }
+    }
+  
+    &.right {
+      right: 0;
+      
+      .collapse-button {
+        left: 5px;
+        right: auto; 
+      }
+    }
+
+  //remove this after elements are added in
+    .placeholder {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-color-primary);
+    }
+  
+    .resizer {
+      width: 5px;
+      cursor: ew-resize;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background-color: var(--primary-color);
+      z-index: 100;
+      
+      &.left {
+        right: -2.5px; 
+      }
+  
+      &.right {
+        left: -2.5px;
+      }
+    }
+
+// add in theming for the width and height 
+.collapse-button {
+  position: absolute;
+  background-color: var(--background-color-dark);
+  color: var(--text-color-primary);
+  width: 30px;
+  height: 30px;
+  margin-top: 15px;
+}
+}
+

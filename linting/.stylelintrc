@@ -1,0 +1,22 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "color-no-invalid-hex": true,
+    "font-family-no-duplicate-names": true,
+    "no-duplicate-selectors": true,
+    "selector-type-no-unknown": [true, {
+      "ignoreTypes": ["default"]
+    }],
+    "comment-no-empty": null ,
+    "no-invalid-double-slash-comments": null,
+    "color-hex-length": "long",
+    "comment-empty-line-before": "never"
+  },
+"ignoreFiles": [
+  "**/node_modules/**/*",
+  "**/dist/**/*",
+  "**/some-folder/**/*",
+  "**/excluded-file.scss",
+  "**/public/assets/esri/**/*"
+]
+}

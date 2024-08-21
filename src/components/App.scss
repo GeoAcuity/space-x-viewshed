@@ -1,0 +1,17 @@
+.app {
+  display: grid;
+  grid-template: 30px 75px 1fr 30px / 1fr;
+  grid-template-areas:
+    "top-banner"
+    "header"
+    "map"
+    "bottom-banner";
+  height: 100%;
+  width: 100%;
+}
+.app.no-banners {
+  grid-template: 75px 1fr / 1fr;
+  grid-template-areas:
+    "header"
+    "map";
+}
