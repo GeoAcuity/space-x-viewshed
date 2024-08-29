@@ -1,0 +1,46 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    background-color: #333;
+    color: white;
+    text-align: left;
+    padding-left: 20px;
+  }
+
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    grid-template-rows: auto 1fr;
+    height: calc(100% - 20px); 
+  }
+
+  #viewDiv {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+  }
+
+  .sidebar {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    padding: 10px;
+    background-color: #f4f4f4;
+    overflow-y: auto;
+    height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .button-container {
+    grid-column: 1 / 3;
+    grid-row: 1 / 2;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+  }

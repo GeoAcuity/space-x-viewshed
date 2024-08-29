@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>SpaceX Viewshed Analysis</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <script type="module" src="https://js.arcgis.com/calcite-components/2.8.5/calcite.esm.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/2.8.5/calcite.css" />
+  <script type="module" src="./js/main.js"></script>
+
+</head>
+
+<body>
+  <div class="header">
+    <h3>SpaceX Viewshed Analysis</h3>
+  </div>
+  <div class="main-content">
+  
+    <div class="sidebar">
+      <div class="button-container">
+        <calcite-button id="toggleViewsheds">Hide All Viewsheds</calcite-button>
+      </div>
+      <calcite-panel class="panel-side" id="result-panel">
+        <div slot="header-content" scale="s">
+          <p1 class="heading">Camera List</p1>
+        </div>
+        <calcite-panel id="resultsDiv">
+          <calcite-list selection-mode="single" selection-appearance="icon" id="cameraList"></calcite-list>
+        </calcite-panel>
+      </calcite-panel>
+    </div>
+    <div id="viewDiv"></div>
+  </div>
+</body>
+</html>
