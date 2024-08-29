@@ -1,8 +1,16 @@
 {
-    "showSecurityBanner": false,
-    "panelPosition": "left",
-    "esriToolboxPosition": "right",
-    "customToolboxPosition": "right",
-    "theme": "dark",
-    "customToolBoxVisible": "false"
-  }
+  "elementVisibility":{
+   "showSecurityBanner": true,
+   "showPannel": true,
+   "showCustomToolbox": true
+  },
+     "elementPositioning": {
+     "panelPosition": "left",
+     "esriToolboxPosition": "right",
+     "customToolboxPosition": "right"
+ },
+     "theming" : {
+        "theme": "light"
+     }
+   }
+ 

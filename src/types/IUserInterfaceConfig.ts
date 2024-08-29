@@ -1,7 +1,15 @@
 export interface IUserInterfaceConfig {
-    esriToolboxPosition: "left" | "right";
+  elementVisibility: {
     showSecurityBanner: boolean;
-    panelPosition: "left" | "right";
-    customToolboxPosition: "left" | "right";
-    theme: "dark" | "light";
+    showPannel: boolean;
+    showCustomToolbox: boolean;
   };
+  elementPositioning: {
+    panelPosition: "left" | "right";
+    esriToolboxPosition: "left" | "right";
+    customToolboxPosition: "left" | "right" ;
+  };
+  theming: {
+    theme: "light" | "dark";
+  };
+}

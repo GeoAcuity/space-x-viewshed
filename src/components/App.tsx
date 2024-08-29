@@ -26,7 +26,7 @@ const App = (props: IProps) => {
 
   }, []);
 
-  const bannersVisible = props.uiConfig.showSecurityBanner;
+  const bannersVisible = props.uiConfig.elementVisibility.showSecurityBanner;
   // If bannersVisible is true, use the default layout including space for both banners
   // If bannersVisible is false, use the layout that excludes space for both banners
   const appClass = bannersVisible ? "app" : "app no-banners";

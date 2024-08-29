@@ -5,6 +5,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton } from "@mui/material";
 import { IAppConfig } from "../types/IAppConfig";
 
+import LayerList from "./LayerList"; // Import the LayerList component
 
 // --Component Imports
 import Buttons from "./Buttons";
@@ -87,14 +88,8 @@ const Panel: React.FC<IProps> = ({ position, config }) => {
       {!isCollapsed && (
         <div className={`resizer ${position}`} onMouseDown={handleMouseDown} />
       )}
-        {!isCollapsed && <Buttons tabsConfig={config.component.tabs} buttonsConfig={config.component.buttons} />}
-      {/* {!isCollapsed && <Tabbing />} */}
-      {!isCollapsed && (
-        <>
-          <div className="placeholder">ACCORDION</div>
-        </>
-      )}
-    </div>
+
+      </div>
   );
 };
 

@@ -1,10 +1,10 @@
 {
   "map": {
-    "itemId": "c4288793ffad4e75821d12516dbb87d0"
+    "itemId": "09e9d9a2cf064eb8912e1a194364ed86"
   },
   "app": {
-    "portalUrl": "https://geoacuity.maps.arcgis.com/",
-    "appId": "V5RtzjIhIh5VVWfH",
+    "portalUrl": "https://spacextexas.maps.arcgis.com/",
+    "appId": "9fdiEMDPYDvB2HXe",
     "webAppTitle": "Space X Viewshed Model",
     "bannerText": "EDITABLE CONTENT // PLACEHOLDER TEXT"
   },

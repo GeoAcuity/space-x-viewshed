@@ -1,9 +1,9 @@
 {
   "app": {
-    "portalUrl": "https://geoacuity.maps.arcgis.com/portal/",
+    "portalUrl": "https://geoacuity.maps.arcgis.com/",
     "appId": "V5RtzjIhIh5VVWfH"
   },
   "map": {
-    "itemId": "c3d9209d95bd4a199bcdaff26839f803"
+    "itemId": "c4288793ffad4e75821d12516dbb87d0"
   }
 }
