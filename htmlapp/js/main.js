@@ -96,11 +96,18 @@ require([
             }
           }),
           featureLayer
-          
         ]
       }),
+      // environment: {
+      //   background: {
+      //     type: "color",
+      //     color: [0, 0, 128, 1] // Dark blue color (R, G, B, A)
+      //   },
+      //   starsEnabled: false, // Disable stars
+      //   atmosphereEnabled: false // Disable atmosphere
+      // }
     });
-
+  
     const layerListWidget = new LayerList({
       view: view
     });
@@ -177,7 +184,9 @@ require([
       });
     };
     
-    const iFrameUrl = "http://10.64.152.142/";
+    const iFrameUrl = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=43.421&lon=-110.789"
+    
+    // "http://10.64.152.142/";
 
     const showPopup = (geometry, attributes) => {
       // Create a calcite-card element
