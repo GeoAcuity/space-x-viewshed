@@ -77,22 +77,22 @@ require([
       container: "viewDiv",
       camera: {
         position: {
-          x: -97.4059591,
-          y: 30.1521249,
+          x: -97.406953,
+          y: 30.149714,
           z: 700.477
         },
         heading: 1.2311944909542853,
         tilt: 45
       },
       map: new Map({
-        basemap: "gray",
+        // basemap: "gray",
         // ground: "world-elevation",
         layers: [
           new IntegratedMeshLayer({
             url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer",
             elevationInfo: {
               mode: "absolute-height",
-              offset: 24
+              offset: 27
             }
           }),
           featureLayer
@@ -177,7 +177,7 @@ require([
       });
     };
     
-    const iFrameUrl = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=43.496&lon=-110.867";
+    const iFrameUrl = "http://10.64.152.142/";
 
     const showPopup = (geometry, attributes) => {
       // Create a calcite-card element
@@ -234,7 +234,7 @@ require([
       card.appendChild(actionIcon);
     
       // Open the popup and directly append the card element
-      view.popup.open({
+      view.openPopup({
         title: attributes.devicename, // Still show the title in the popup header
         location: geometry,
       });
