@@ -8,12 +8,16 @@ require([
   "esri/layers/FeatureLayer",
   "esri/widgets/LayerList",
    "esri/widgets/Expand",
-  "esri/core/reactiveUtils"
-], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils) {
+  "esri/core/reactiveUtils",
+  "esri/Graphic",
+  "esri/layers/GraphicsLayer",
+  "esri/symbols/SimpleMarkerSymbol"
+], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol) {
 
     let viewsheds = [];
+    let selectedViewsheds = new Set(); 
     let viewshedAnalysis;
-    let areViewshedsVisible = true; // Track visibility state
+    let areViewshedsVisible = true; 
     const listNode = document.getElementById("cameraList");
 
     const featureLayer = new FeatureLayer({
@@ -35,42 +39,6 @@ require([
       //   <iframe width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=43.496&lon=-110.867"></iframe>
       //   `
       // }
-    });
-
-    // Query features and create viewsheds
-    featureLayer.queryFeatures().then(function(response) {
-      convertFeatureSetToRows(response);
-
-      const features = response.features;
-      features.forEach(function(feature) {
-        const viewshed = new Viewshed({
-          observer: {
-            x: feature.geometry.x,
-            y: feature.geometry.y,
-            z: feature.attributes.Elevation_m
-          },
-          farDistance: feature.attributes.fardistance_m,
-          tilt: feature.attributes.Tilt,
-          heading: feature.attributes.cameraheading,
-          horizontalFieldOfView: feature.attributes.horizontalfieldofview_viewshed_,
-          verticalFieldOfView: feature.attributes.verticalfieldofview
-        });
-        viewsheds.push(viewshed);
-      });
-
-      // Initialize ViewshedAnalysis after creating viewsheds
-      viewshedAnalysis = new ViewshedAnalysis({
-        viewsheds: viewsheds
-      });
-
-      view.analyses.add(viewshedAnalysis);
-      console.log(viewshedAnalysis)
-      view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
-        // analysisView.interactive = true;
-        // analysisView.visible = false;
-        analysisView.selectedViewshed = viewsheds[0]; // Set default viewshed
-        analysisView.visible = true;
-      });
     });
 
     const view = new SceneView({
@@ -107,7 +75,43 @@ require([
       //   atmosphereEnabled: false // Disable atmosphere
       // }
     });
-  
+
+    // Query features and create viewsheds
+    featureLayer.queryFeatures().then(function(response) {
+      convertFeatureSetToRows(response);
+
+      const features = response.features;
+      features.forEach(function(feature) {
+        const viewshed = new Viewshed({
+          observer: {
+            x: feature.geometry.x,
+            y: feature.geometry.y,
+            z: feature.attributes.Elevation_m
+          },
+          farDistance: feature.attributes.fardistance_m,
+          tilt: feature.attributes.Tilt,
+          heading: feature.attributes.cameraheading,
+          horizontalFieldOfView: feature.attributes.horizontalfieldofview_viewshed_,
+          verticalFieldOfView: feature.attributes.verticalfieldofview
+        });
+        viewsheds.push(viewshed);
+      });
+
+      // Initialize ViewshedAnalysis after creating viewsheds
+      viewshedAnalysis = new ViewshedAnalysis({
+        viewsheds: viewsheds
+      });
+
+      view.analyses.add(viewshedAnalysis);
+      console.log(viewshedAnalysis)
+      view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
+        // analysisView.interactive = true;
+        analysisView.selectedViewshed = viewsheds[0]; // Set default viewshed
+        analysisView.visible = true;
+      });
+    });
+
+
     const layerListWidget = new LayerList({
       view: view
     });
@@ -128,22 +132,36 @@ require([
       const target = event.target;
       const resultId = target.getAttribute("value");
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
-
+    
       if (selectedViewshed) {
-        view.goTo({
-          target: selectedViewshed.observer,
-          scale: 600
-        })
-        .then(() => {
-          viewshedAnalysis.viewsheds = [selectedViewshed];
-        })
-        .catch((error) => {
-          if (error.name !== "AbortError") {
-            console.error(error);
-          }
-        });
+        // Toggle the selected viewshed in the set
+        if (selectedViewsheds.has(selectedViewshed)) {
+          selectedViewsheds.delete(selectedViewshed);
+        } else {
+          selectedViewsheds.add(selectedViewshed);
+        }
+    
+        // Update the viewshed analysis
+        viewshedAnalysis.viewsheds = Array.from(selectedViewsheds);
+    
+        // Zoom to the selected viewshed if there are any selected
+        if (selectedViewsheds.size > 0) {
+          view.goTo({
+            target: selectedViewshed.observer,
+            scale: 600
+          });
+        } else {
+          // If no viewsheds are selected, display all viewsheds
+          viewshedAnalysis.viewsheds = viewsheds;
+          view.goTo({
+            scale: 3000
+          });
+        }
+    
+        console.log(`Selected viewsheds count: ${selectedViewsheds.size}`); // Debug log
       }
     };
+
     const convertFeatureSetToRows = (response) => {
       listNode.innerHTML = ""; // Clear the list before adding new items
     
@@ -242,53 +260,51 @@ require([
     
       card.appendChild(actionIcon);
     
+      view.popup.alignment = "bottom-right"; 
+      view.popup.dockEnabled = true; 
+      view.popup.dockOptions = {
+        buttonEnabled: false, // Hide the dock button
+        breakpoint: false,   
+        position: "bottom-right" // Pin the popup to the bottom-right corner
+      };
+
+      // Append the card directly to the popup's content element
+      view.popup.content = card;
+
       // Open the popup and directly append the card element
       view.openPopup({
         title: attributes.devicename, // Still show the title in the popup header
         location: geometry,
       });
     
-      // Append the card directly to the popup's content element
-      view.popup.content = card;
-    
-      // Configure popup alignment and docking
-      view.popup.alignment = "bottom-right"; 
-      view.popup.dockEnabled = true; 
-    };
+   // Zoom to the camera location
+   view.goTo({
+    target: geometry,
+    scale: 800
+  }).catch((error) => {
+    if (error.name !== "AbortError") {
+      console.error(error);
+    }
+  });
+};
 
 
-    //   const showPopup = (geometry, attributes) => {
-  //     view.popup.dockOptions = {
-  //       buttonEnabled: false, // Hide the dock button
-  //       breakpoint: false,   
-  //       position: "bottom-right" // Pin the popup to the bottom-right corner
-  //     };
-  //     const popupContent = `
-  //     <iframe height="450" src="${iFrameUrl}"></iframe>
-  // `;
-
-  //     view.openPopup({
-  //       title: attributes.devicename,
-  //       content: popupContent,
-  //       location: geometry,
-  //     });
-
-  //     view.popup.alignment = "bottom-right"; 
-  //     view.popup.dockEnabled = true; 
-  //   };
- 
     // Function to toggle viewsheds
     const toggleViewsheds = () => {
       if (areViewshedsVisible) {
         viewshedAnalysis.viewsheds = [];
         document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
-   
       } else {
-        viewshedAnalysis.viewsheds = viewsheds;
+        // If there are selected viewsheds, show only those; otherwise, show all viewsheds
+        if (selectedViewsheds.size > 0) {
+          viewshedAnalysis.viewsheds = Array.from(selectedViewsheds);
+        } else {
+          viewshedAnalysis.viewsheds = viewsheds;
+        }
         document.getElementById("toggleViewsheds").innerText = "Hide All Viewsheds";
         view.goTo({
           scale: 3000
-        })
+        });
       }
       areViewshedsVisible = !areViewshedsVisible;
       console.log(`Viewsheds visibility: ${areViewshedsVisible ? 'Visible' : 'Hidden'}`); // Debug log
