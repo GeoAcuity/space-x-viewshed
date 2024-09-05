@@ -53,8 +53,9 @@ require([
         tilt: 45
       },
       map: new Map({
-        // basemap: "gray",
-        // ground: "world-elevation",
+        basemap: "satellite",
+        ground: "world-elevation",
+
         layers: [
           new IntegratedMeshLayer({
             url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer",
@@ -74,6 +75,14 @@ require([
       //   starsEnabled: false, // Disable stars
       //   atmosphereEnabled: false // Disable atmosphere
       // }
+    });
+
+    view.when(function() {
+      view.environment = {
+        atmosphereEnabled: true,
+        starsEnabled: true,
+        surfaceColor: '#004C73'  // Set the ground color here
+      };
     });
 
     // Query features and create viewsheds
@@ -128,39 +137,89 @@ require([
     });
 
     
+    const toggleViewsheds = () => {
+      if (areViewshedsVisible) {
+        // Hide all viewsheds
+        viewshedAnalysis.viewsheds = [];
+        document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
+        areViewshedsVisible = false;
+      } else {
+        // Show all viewsheds
+        viewshedAnalysis.viewsheds = viewsheds; // Show all viewsheds
+    
+        // Clear selection if it was previously set
+        selectedViewsheds.clear();  
+        const listItems = document.querySelectorAll("#cameraList calcite-list-item");
+        listItems.forEach(item => {
+          item.setAttribute("selected", false); // Clear selection styling
+        });
+    
+        // Ensure the button text and state reflect that all viewsheds are shown
+        document.getElementById("toggleViewsheds").innerText = "Hide All Viewsheds";
+        areViewshedsVisible = true;
+    
+        // Update the map view
+        view.goTo({
+          target: viewsheds.length > 0 ? viewsheds[0].observer : view.camera.position,
+          scale: viewsheds.length > 0 ? 3000 : 10000
+        }).catch((error) => {
+          if (error.name !== "AbortError") {
+            console.error(error);
+          }
+        });
+      }
+    };
+
+    // Update button text based on the state of selected viewsheds
+    const updateButtonState = () => {
+      if (selectedViewsheds.size > 0) {
+        document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
+      } else {
+        document.getElementById("toggleViewsheds").innerText = "Hide All Viewsheds";
+      }
+    };
+    
+    // Update the event listener logic when a camera is clicked
     const onCameraClickHandler = (event) => {
       const target = event.target;
       const resultId = target.getAttribute("value");
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
     
       if (selectedViewshed) {
-        // Toggle the selected viewshed in the set
-        if (selectedViewsheds.has(selectedViewshed)) {
+        view.popup.close();
+    
+        const wasSelected = selectedViewsheds.has(selectedViewshed);
+    
+        if (wasSelected) {
           selectedViewsheds.delete(selectedViewshed);
         } else {
           selectedViewsheds.add(selectedViewshed);
         }
     
-        // Update the viewshed analysis
         viewshedAnalysis.viewsheds = Array.from(selectedViewsheds);
     
-        // Zoom to the selected viewshed if there are any selected
-        if (selectedViewsheds.size > 0) {
+        if (!wasSelected && selectedViewsheds.size > 0) {
           view.goTo({
             target: selectedViewshed.observer,
             scale: 600
           });
-        } else {
-          // If no viewsheds are selected, display all viewsheds
+        }
+    
+        // If no viewsheds are selected, display all viewsheds
+        if (selectedViewsheds.size === 0) {
           viewshedAnalysis.viewsheds = viewsheds;
           view.goTo({
             scale: 3000
           });
         }
     
+        updateButtonState();  // Update the button state after selection
         console.log(`Selected viewsheds count: ${selectedViewsheds.size}`); // Debug log
       }
     };
+    
+    // Add the event listener for the toggle button
+    document.getElementById("toggleViewsheds").addEventListener("click", toggleViewsheds);
 
     const convertFeatureSetToRows = (response) => {
       listNode.innerHTML = ""; // Clear the list before adding new items
@@ -287,29 +346,4 @@ require([
     }
   });
 };
-
-
-    // Function to toggle viewsheds
-    const toggleViewsheds = () => {
-      if (areViewshedsVisible) {
-        viewshedAnalysis.viewsheds = [];
-        document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
-      } else {
-        // If there are selected viewsheds, show only those; otherwise, show all viewsheds
-        if (selectedViewsheds.size > 0) {
-          viewshedAnalysis.viewsheds = Array.from(selectedViewsheds);
-        } else {
-          viewshedAnalysis.viewsheds = viewsheds;
-        }
-        document.getElementById("toggleViewsheds").innerText = "Hide All Viewsheds";
-        view.goTo({
-          scale: 3000
-        });
-      }
-      areViewshedsVisible = !areViewshedsVisible;
-      console.log(`Viewsheds visibility: ${areViewshedsVisible ? 'Visible' : 'Hidden'}`); // Debug log
-    };
-
-    // Add event listener for the toggle button
-    document.getElementById("toggleViewsheds").addEventListener("click", toggleViewsheds);
-  });
+});
