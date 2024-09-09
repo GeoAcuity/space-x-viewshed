@@ -12,6 +12,7 @@
 
 # production
 /build
+/build-copy
 
 # misc
 .DS_Store

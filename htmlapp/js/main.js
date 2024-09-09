@@ -54,7 +54,7 @@ require([
       },
       map: new Map({
         basemap: "satellite",
-        ground: "world-elevation",
+        // ground: "world-elevation",
 
         layers: [
           new IntegratedMeshLayer({
@@ -84,9 +84,12 @@ require([
         surfaceColor: '#004C73'  // Set the ground color here
       };
     });
-
+const query = featureLayer.createQuery();
+// query.geometry = aoi;
+// query.spatialRelationship = "intersects"; // this is the default
+query.returnGeometry = true;
     // Query features and create viewsheds
-    featureLayer.queryFeatures().then(function(response) {
+    featureLayer.queryFeatures(query).then(function(response) {
       convertFeatureSetToRows(response);
 
       const features = response.features;
