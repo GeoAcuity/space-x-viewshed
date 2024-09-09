@@ -303,7 +303,7 @@ query.returnGeometry = true;
       // Create the iframe element
       const iframe = document.createElement("iframe");
       iframe.height = "250"; // Adjust height as needed
-      iframe.src = iFrameUrl;
+      iframe.src = `${attributes.IP}`;
       iframe.style.width = "100%"; // Make the iframe take the full width of the card
       iframe.setAttribute("frameborder", "0");
     
