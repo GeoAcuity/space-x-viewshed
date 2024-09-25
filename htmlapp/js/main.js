@@ -25,7 +25,7 @@ require([
       elevationInfo: {
         mode: "absolute-height",
         featureExpressionInfo: {
-          expression: "$feature.Elevation_m"
+          expression: "$feature.elevation_m_Jun2024"
         },
         unit: "meters"
       },
@@ -61,7 +61,7 @@ require([
             url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer",
             elevationInfo: {
               mode: "absolute-height",
-              offset: 27
+              offset: 9
             }
           }),
           featureLayer
