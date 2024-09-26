@@ -17,7 +17,7 @@ require([
     let viewsheds = [];
     let selectedViewsheds = new Set(); 
     let viewshedAnalysis;
-    let areViewshedsVisible = true; 
+    let areViewshedsVisible = false; 
     const listNode = document.getElementById("cameraList");
 
     const featureLayer = new FeatureLayer({
@@ -111,17 +111,14 @@ query.returnGeometry = true;
 
       // Initialize ViewshedAnalysis after creating viewsheds
       viewshedAnalysis = new ViewshedAnalysis({
-        viewsheds: viewsheds
+        viewsheds: []
       });
 
       view.analyses.add(viewshedAnalysis);
-      console.log(viewshedAnalysis)
-      view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
-        // analysisView.interactive = true;
-        analysisView.selectedViewshed = viewsheds[0]; // Set default viewshed
-        analysisView.visible = true;
-      });
-    });
+
+      areViewshedsVisible = false;
+  document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
+});
 
 
     const layerListWidget = new LayerList({
@@ -144,34 +141,43 @@ query.returnGeometry = true;
       if (areViewshedsVisible) {
         // Hide all viewsheds
         viewshedAnalysis.viewsheds = [];
+        
+        // Clear selected viewsheds
+        selectedViewsheds.clear();
+    
+        // Deselect all list items visually
+        const listItems = document.querySelectorAll("#cameraList calcite-list-item");
+        listItems.forEach(item => {
+          item.removeAttribute("selected"); // Deselect each list item
+        });
+    
         document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
         areViewshedsVisible = false;
       } else {
         // Show all viewsheds
-        viewshedAnalysis.viewsheds = viewsheds; // Show all viewsheds
+        viewshedAnalysis.viewsheds = viewsheds;
     
         // Clear selection if it was previously set
-        selectedViewsheds.clear();  
+        selectedViewsheds.clear();
         const listItems = document.querySelectorAll("#cameraList calcite-list-item");
         listItems.forEach(item => {
           item.setAttribute("selected", false); // Clear selection styling
         });
     
-        // Ensure the button text and state reflect that all viewsheds are shown
         document.getElementById("toggleViewsheds").innerText = "Hide All Viewsheds";
         areViewshedsVisible = true;
     
-        // Update the map view
-        view.goTo({
-          target: viewsheds.length > 0 ? viewsheds[0].observer : view.camera.position,
-          scale: viewsheds.length > 0 ? 3000 : 10000
-        }).catch((error) => {
-          if (error.name !== "AbortError") {
-            console.error(error);
-          }
-        });
+     // Update the map view to focus on viewsheds
+    view.goTo({
+      target: viewsheds.length > 0 ? viewsheds[0].observer : view.camera.position,
+      scale: viewsheds.length > 0 ? 3000 : 10000
+    }).catch((error) => {
+      if (error.name !== "AbortError") {
+        console.error(error);
       }
-    };
+    });
+  }
+};
 
     // Update button text based on the state of selected viewsheds
     const updateButtonState = () => {
@@ -210,7 +216,7 @@ query.returnGeometry = true;
     
         // If no viewsheds are selected, display all viewsheds
         if (selectedViewsheds.size === 0) {
-          viewshedAnalysis.viewsheds = viewsheds;
+          viewshedAnalysis.viewsheds = [];
           view.goTo({
             scale: 3000
           });
