@@ -21,11 +21,11 @@ require([
     const listNode = document.getElementById("cameraList");
 
     const featureLayer = new FeatureLayer({
-      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Exterior_Cameras/FeatureServer/3",
+      url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/88759b17e8184026ae90c9c092df9dac/rest/services/Bastrop_Exterior_Cameras/FeatureServer",
       elevationInfo: {
         mode: "absolute-height",
         featureExpressionInfo: {
-          expression: "$feature.Elevation_m"
+          expression: "$feature.elevation_m_Jun2024"
         },
         unit: "meters"
       },
@@ -54,14 +54,14 @@ require([
       },
       map: new Map({
         basemap: "satellite",
-        // ground: "world-elevation",
+        ground: "world-elevation",
 
         layers: [
           new IntegratedMeshLayer({
-            url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer",
+            url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/b45505e6448945c1bc31cdae21ddd602/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
             elevationInfo: {
               mode: "absolute-height",
-              offset: 27
+              offset: 9
             }
           }),
           featureLayer
@@ -98,7 +98,7 @@ query.returnGeometry = true;
           observer: {
             x: feature.geometry.x,
             y: feature.geometry.y,
-            z: feature.attributes.Elevation_m
+            z: feature.attributes.elevation_m_Jun2024
           },
           farDistance: feature.attributes.fardistance_m,
           tilt: feature.attributes.Tilt,
