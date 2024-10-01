@@ -54,14 +54,14 @@ require([
       },
       map: new Map({
         basemap: "satellite",
-        // ground: "world-elevation",
+        ground: "world-elevation",
 
         layers: [
           new IntegratedMeshLayer({
             url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer",
             elevationInfo: {
               mode: "absolute-height",
-              offset: 27
+              offset: 9
             }
           }),
           featureLayer
