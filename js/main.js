@@ -16,6 +16,7 @@ require([
 
     let viewsheds = [];
     let selectedViewsheds = new Set(); 
+    selectedViewsheds.clear();
     let viewshedAnalysis;
     let areViewshedsVisible = false; 
     const listNode = document.getElementById("cameraList");
@@ -29,16 +30,23 @@ require([
         },
         unit: "meters"
       },
-      // popupTemplate: {
-      //   title: "{devicename}",
-      //   content: `
-      //   <b>Camera Heading:</b>{cameraheading}<br>
-      // <b>Horizontal Field of View:</b> {horizontalfieldofview_viewshed_}<br>
-      //   <b>Vertical Field of View:</b> {verticalfieldofview}<br>
-      //   <b>Camera Height:</b> {locationheight}
-      //   <iframe width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=43.496&lon=-110.867"></iframe>
-      //   `
-      // }
+      popupTemplate: {
+        title: "{devicename}{cameraheading}{horizontalfieldofview_viewshed_}{verticalfieldofview}{locationheight}{IP}",
+        content:
+
+        function(event) {
+          // `event.graphic` holds the feature clicked on the map
+          const geometry = event.graphic.geometry;
+          const attributes = event.graphic.attributes;
+          console.log("Attributes:", attributes);  // Log to see if attributes exist
+
+          // Call the custom showPopup function
+          showPopup(geometry, attributes,  false);
+
+          // Return an empty string as the popup content will be handled in the `showPopup` function.
+          return""
+        }
+      }
     });
 
     const view = new SceneView({
@@ -67,14 +75,7 @@ require([
           featureLayer
         ]
       }),
-      // environment: {
-      //   background: {
-      //     type: "color",
-      //     color: [0, 0, 128, 1] // Dark blue color (R, G, B, A)
-      //   },
-      //   starsEnabled: false, // Disable stars
-      //   atmosphereEnabled: false // Disable atmosphere
-      // }
+
     });
 
     view.when(function() {
@@ -109,16 +110,21 @@ query.returnGeometry = true;
         viewsheds.push(viewshed);
       });
 
-      // Initialize ViewshedAnalysis after creating viewsheds
+      // Initialize ViewshedAnalysis as being empty after creating viewsheds
       viewshedAnalysis = new ViewshedAnalysis({
         viewsheds: []
       });
+      // Have Button prompt to show viewsheds
+      document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds"
 
       view.analyses.add(viewshedAnalysis);
-
-      areViewshedsVisible = false;
-  document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
-});
+      console.log(viewshedAnalysis)
+      view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
+        // analysisView.interactive = true;
+        analysisView.selectedViewshed = viewsheds[0]; // Set default viewshed
+        analysisView.visible = true;
+      });
+    });
 
 
     const layerListWidget = new LayerList({
@@ -141,21 +147,11 @@ query.returnGeometry = true;
       if (areViewshedsVisible) {
         // Hide all viewsheds
         viewshedAnalysis.viewsheds = [];
-        
-        // Clear selected viewsheds
-        selectedViewsheds.clear();
-    
-        // Deselect all list items visually
-        const listItems = document.querySelectorAll("#cameraList calcite-list-item");
-        listItems.forEach(item => {
-          item.removeAttribute("selected"); // Deselect each list item
-        });
-    
         document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds";
         areViewshedsVisible = false;
       } else {
         // Show all viewsheds
-        viewshedAnalysis.viewsheds = viewsheds;
+        viewshedAnalysis.viewsheds = viewsheds; // Show all viewsheds
     
         // Clear selection if it was previously set
         selectedViewsheds.clear();
@@ -164,20 +160,21 @@ query.returnGeometry = true;
           item.setAttribute("selected", false); // Clear selection styling
         });
     
+        // Ensure the button text and state reflect that all viewsheds are shown
         document.getElementById("toggleViewsheds").innerText = "Hide All Viewsheds";
         areViewshedsVisible = true;
     
-     // Update the map view to focus on viewsheds
-    view.goTo({
-      target: viewsheds.length > 0 ? viewsheds[0].observer : view.camera.position,
-      scale: viewsheds.length > 0 ? 3000 : 10000
-    }).catch((error) => {
-      if (error.name !== "AbortError") {
-        console.error(error);
+        // Update the map view
+        view.goTo({
+          target: viewsheds.length > 0 ? viewsheds[0].observer : view.camera.position,
+          scale: viewsheds.length > 0 ? 3000 : 10000
+        }).catch((error) => {
+          if (error.name !== "AbortError") {
+            console.error(error);
+          }
+        });
       }
-    });
-  }
-};
+    };
 
     // Update button text based on the state of selected viewsheds
     const updateButtonState = () => {
@@ -215,12 +212,14 @@ query.returnGeometry = true;
         }
     
         // If no viewsheds are selected, display all viewsheds
-        if (selectedViewsheds.size === 0) {
-          viewshedAnalysis.viewsheds = [];
-          view.goTo({
-            scale: 3000
-          });
-        }
+
+        // feature off
+        // if (selectedViewsheds.size === 0) {
+        //   viewshedAnalysis.viewsheds = viewsheds;
+        //   view.goTo({
+        //     scale: 3000
+        //   });
+        // }
     
         updateButtonState();  // Update the button state after selection
         console.log(`Selected viewsheds count: ${selectedViewsheds.size}`); // Debug log
@@ -257,7 +256,7 @@ query.returnGeometry = true;
         //Add an event listener to the action icon to show the popup
         actionIcon.addEventListener("click", (event) => {
           event.stopPropagation(); // Prevent triggering the list item click event
-          showPopup(result.geometry, attributes);
+          showPopup(result.geometry, attributes, true);
         });
     
         item.appendChild(actionIcon);
@@ -274,7 +273,7 @@ query.returnGeometry = true;
     
     // "http://10.64.152.142/";
 
-    const showPopup = (geometry, attributes) => {
+    const showPopup = (geometry, attributes, shouldZoom = false) => {
       // Create a calcite-card element
       const card = document.createElement("calcite-card");
     
@@ -346,13 +345,15 @@ query.returnGeometry = true;
       });
     
    // Zoom to the camera location
-   view.goTo({
-    target: geometry,
-    scale: 800
-  }).catch((error) => {
-    if (error.name !== "AbortError") {
-      console.error(error);
-    }
-  });
+   if (shouldZoom) {
+    view.goTo({
+      target: geometry,
+      scale: 800
+    }).catch((error) => {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    });
+  }
 };
 });
