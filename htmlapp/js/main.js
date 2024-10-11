@@ -16,8 +16,9 @@ require([
 
     let viewsheds = [];
     let selectedViewsheds = new Set(); 
+    selectedViewsheds.clear();  
     let viewshedAnalysis;
-    let areViewshedsVisible = true; 
+    let areViewshedsVisible = false; 
     const listNode = document.getElementById("cameraList");
 
     const featureLayer = new FeatureLayer({
@@ -25,7 +26,7 @@ require([
       elevationInfo: {
         mode: "absolute-height",
         featureExpressionInfo: {
-          expression: "$feature.Elevation_m"
+          expression: "$feature.elevation_m_Jun2024"
         },
         unit: "meters"
       },
@@ -58,7 +59,7 @@ require([
 
         layers: [
           new IntegratedMeshLayer({
-            url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_3D_03MAR2024/SceneServer",
+            url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
             elevationInfo: {
               mode: "absolute-height",
               offset: 9
@@ -98,7 +99,7 @@ query.returnGeometry = true;
           observer: {
             x: feature.geometry.x,
             y: feature.geometry.y,
-            z: feature.attributes.Elevation_m
+            z: feature.attributes.elevation_m_Jun2024
           },
           farDistance: feature.attributes.fardistance_m,
           tilt: feature.attributes.Tilt,
@@ -109,10 +110,12 @@ query.returnGeometry = true;
         viewsheds.push(viewshed);
       });
 
-      // Initialize ViewshedAnalysis after creating viewsheds
+      // Initialize ViewshedAnalysis as being empty after creating viewsheds
       viewshedAnalysis = new ViewshedAnalysis({
-        viewsheds: viewsheds
+        viewsheds: []
       });
+      // Have Button prompt to show viewsheds
+      document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds"
 
       view.analyses.add(viewshedAnalysis);
       console.log(viewshedAnalysis)
@@ -209,12 +212,14 @@ query.returnGeometry = true;
         }
     
         // If no viewsheds are selected, display all viewsheds
-        if (selectedViewsheds.size === 0) {
-          viewshedAnalysis.viewsheds = viewsheds;
-          view.goTo({
-            scale: 3000
-          });
-        }
+
+        // feature off
+        // if (selectedViewsheds.size === 0) {
+        //   viewshedAnalysis.viewsheds = viewsheds;
+        //   view.goTo({
+        //     scale: 3000
+        //   });
+        // }
     
         updateButtonState();  // Update the button state after selection
         console.log(`Selected viewsheds count: ${selectedViewsheds.size}`); // Debug log
@@ -303,7 +308,7 @@ query.returnGeometry = true;
       // Create the iframe element
       const iframe = document.createElement("iframe");
       iframe.height = "250"; // Adjust height as needed
-      iframe.src = iFrameUrl;
+      iframe.src = attributes.IP;
       iframe.style.width = "100%"; // Make the iframe take the full width of the card
       iframe.setAttribute("frameborder", "0");
     
