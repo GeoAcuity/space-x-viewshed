@@ -30,16 +30,23 @@ require([
         },
         unit: "meters"
       },
-      // popupTemplate: {
-      //   title: "{devicename}",
-      //   content: `
-      //   <b>Camera Heading:</b>{cameraheading}<br>
-      // <b>Horizontal Field of View:</b> {horizontalfieldofview_viewshed_}<br>
-      //   <b>Vertical Field of View:</b> {verticalfieldofview}<br>
-      //   <b>Camera Height:</b> {locationheight}
-      //   <iframe width="650" height="450" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=43.496&lon=-110.867"></iframe>
-      //   `
-      // }
+      popupTemplate: {
+        title: "{devicename}{cameraheading}{horizontalfieldofview_viewshed_}{verticalfieldofview}{locationheight}{IP}",
+        content: 
+   
+        function(event) {
+          // `event.graphic` holds the feature clicked on the map
+          const geometry = event.graphic.geometry;
+          const attributes = event.graphic.attributes;
+          console.log("Attributes:", attributes);  // Log to see if attributes exist
+
+          // Call the custom showPopup function
+          showPopup(geometry, attributes,  false);
+          
+          // Return an empty string as the popup content will be handled in the `showPopup` function.
+          return""
+        }
+      }
     });
 
     const view = new SceneView({
@@ -68,14 +75,7 @@ require([
           featureLayer
         ]
       }),
-      // environment: {
-      //   background: {
-      //     type: "color",
-      //     color: [0, 0, 128, 1] // Dark blue color (R, G, B, A)
-      //   },
-      //   starsEnabled: false, // Disable stars
-      //   atmosphereEnabled: false // Disable atmosphere
-      // }
+
     });
 
     view.when(function() {
@@ -256,7 +256,7 @@ query.returnGeometry = true;
         //Add an event listener to the action icon to show the popup
         actionIcon.addEventListener("click", (event) => {
           event.stopPropagation(); // Prevent triggering the list item click event
-          showPopup(result.geometry, attributes);
+          showPopup(result.geometry, attributes, true);
         });
     
         item.appendChild(actionIcon);
@@ -273,7 +273,7 @@ query.returnGeometry = true;
     
     // "http://10.64.152.142/";
 
-    const showPopup = (geometry, attributes) => {
+    const showPopup = (geometry, attributes, shouldZoom = false) => {
       // Create a calcite-card element
       const card = document.createElement("calcite-card");
     
@@ -345,13 +345,15 @@ query.returnGeometry = true;
       });
     
    // Zoom to the camera location
-   view.goTo({
-    target: geometry,
-    scale: 800
-  }).catch((error) => {
-    if (error.name !== "AbortError") {
-      console.error(error);
-    }
-  });
+   if (shouldZoom) {
+    view.goTo({
+      target: geometry,
+      scale: 800
+    }).catch((error) => {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    });
+  }
 };
 });
