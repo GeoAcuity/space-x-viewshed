@@ -311,7 +311,8 @@ query.returnGeometry = true;
       iframe.src = `${attributes.IP}`;
       iframe.style.width = "100%"; // Make the iframe take the full width of the card
       iframe.setAttribute("frameborder", "0");
-    
+      iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms"); // Set sandbox permissions
+
       // Create a content div and add the iframe to it
       const contentDiv = document.createElement("div");
       contentDiv.appendChild(iframe);
