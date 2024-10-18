@@ -13,7 +13,10 @@ require([
   "esri/layers/GraphicsLayer",
   "esri/symbols/SimpleMarkerSymbol",
   "esri/layers/ElevationLayer",
-], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer) {
+  "esri/geometry/Point",
+  "esri/geometry/Multipoint",
+  "esri/core/promiseUtils"
+], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer, Point, Multipoint, promiseUtils) {
 
     let viewsheds = [];
     let selectedViewsheds = new Set(); 
@@ -22,9 +25,9 @@ require([
     let areViewshedsVisible = false; 
     const listNode = document.getElementById("cameraList");
 
-    const elevationLayer = new ElevationLayer({
-      url: "https://elevation.arcgis.com/arcgis/rest/services/WorldElevation/EPD/GPServer"
-    });
+    // const elevationLayer = new ElevationLayer({
+    //   url: "https://elevation.arcgis.com/arcgis/rest/services/WorldElevation/EPD/GPServer"
+    // });
 
     const featureLayer = new FeatureLayer({
       url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
@@ -52,6 +55,10 @@ require([
           return""
         }
       }
+    });
+    // Create elevation layers
+    const WorldElevationLayer = new ElevationLayer({
+      url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
     });
 
     const view = new SceneView({
@@ -101,25 +108,42 @@ query.returnGeometry = true;
       const features = response.features;
       
       features.forEach(function(feature) {
-        const viewshed = new Viewshed({
-          observer: {
-            x: feature.geometry.x,
-            y: feature.geometry.y,
-            z: feature.attributes.camera_height_off_ground_m
-          },
-          farDistance: feature.attributes.far_distance_m,
-          tilt: feature.attributes.camera_tilt,
-          heading: feature.attributes.camera_heading,
-          horizontalFieldOfView: feature.attributes.horizontal_field_of_view,
-          verticalFieldOfView: feature.attributes.vertical_field_of_view_
+        const position = feature.geometry;
+        WorldElevationLayer
+          .queryElevation(new Multipoint({ points: [[position.x, position.y]] }), {
+            returnSampleInfo: true
+        })
+        // sample points
+        .then(function (result) {
+          // print result
+          // result.geometry.points.forEach(function (point, index) {
+          const elevation = Math.round(result.geometry.points[0][2]);
+          console.log(elevation);
+        
+          const viewshed = new Viewshed({
+            observer: {
+              x: feature.geometry.x,
+              y: feature.geometry.y,
+              z: elevation + feature.attributes.camera_height_off_ground_m
+            },
+            farDistance: feature.attributes.far_distance_m,
+            tilt: feature.attributes.camera_tilt,
+            heading: feature.attributes.camera_heading,
+            horizontalFieldOfView: feature.attributes.horizontal_field_of_view,
+            verticalFieldOfView: feature.attributes.vertical_field_of_view_
+          });
+          viewsheds.push(viewshed);
+
+
         });
-        viewsheds.push(viewshed);
+        // Initialize ViewshedAnalysis as being empty after creating viewsheds
+        viewshedAnalysis = new ViewshedAnalysis({
+          viewsheds: []
+        });
+        
       });
 
-      // Initialize ViewshedAnalysis as being empty after creating viewsheds
-      viewshedAnalysis = new ViewshedAnalysis({
-        viewsheds: []
-      });
+      
       // Have Button prompt to show viewsheds
       document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds"
 
