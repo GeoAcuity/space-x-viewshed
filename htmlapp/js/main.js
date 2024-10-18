@@ -7,12 +7,13 @@ require([
   "esri/layers/IntegratedMeshLayer",
   "esri/layers/FeatureLayer",
   "esri/widgets/LayerList",
-   "esri/widgets/Expand",
+  "esri/widgets/Expand",
   "esri/core/reactiveUtils",
   "esri/Graphic",
   "esri/layers/GraphicsLayer",
-  "esri/symbols/SimpleMarkerSymbol"
-], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol) {
+  "esri/symbols/SimpleMarkerSymbol",
+  "esri/layers/ElevationLayer",
+], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer) {
 
     let viewsheds = [];
     let selectedViewsheds = new Set(); 
@@ -21,17 +22,21 @@ require([
     let areViewshedsVisible = false; 
     const listNode = document.getElementById("cameraList");
 
+    const elevationLayer = new ElevationLayer({
+      url: "https://elevation.arcgis.com/arcgis/rest/services/WorldElevation/EPD/GPServer"
+    });
+
     const featureLayer = new FeatureLayer({
-      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Exterior_Cameras/FeatureServer/3",
+      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
       elevationInfo: {
-        mode: "absolute-height",
+        mode: "relative-to-ground",
         featureExpressionInfo: {
-          expression: "$feature.elevation_m_Jun2024"
+          expression: "$feature.camera_height_off_ground_m"
         },
         unit: "meters"
       },
       popupTemplate: {
-        title: "{devicename}{cameraheading}{horizontalfieldofview_viewshed_}{verticalfieldofview}{locationheight}{IP}",
+        title: "{camera_device_name}{camera_heading}{horizontal_field_of_view}{vertical_field_of_view_}{camera_height_off_ground_m}{ip_url}",
         content: 
    
         function(event) {
@@ -82,30 +87,31 @@ require([
       view.environment = {
         atmosphereEnabled: true,
         starsEnabled: true,
-        surfaceColor: '#004C73'  // Set the ground color here
+        surfaceColor: '#004C73'
       };
     });
+
+    
 const query = featureLayer.createQuery();
-// query.geometry = aoi;
-// query.spatialRelationship = "intersects"; // this is the default
 query.returnGeometry = true;
     // Query features and create viewsheds
     featureLayer.queryFeatures(query).then(function(response) {
       convertFeatureSetToRows(response);
 
       const features = response.features;
+      
       features.forEach(function(feature) {
         const viewshed = new Viewshed({
           observer: {
             x: feature.geometry.x,
             y: feature.geometry.y,
-            z: feature.attributes.elevation_m_Jun2024
+            z: feature.attributes.camera_height_off_ground_m
           },
-          farDistance: feature.attributes.fardistance_m,
-          tilt: feature.attributes.Tilt,
-          heading: feature.attributes.cameraheading,
-          horizontalFieldOfView: feature.attributes.horizontalfieldofview_viewshed_,
-          verticalFieldOfView: feature.attributes.verticalfieldofview
+          farDistance: feature.attributes.far_distance_m,
+          tilt: feature.attributes.camera_tilt,
+          heading: feature.attributes.camera_heading,
+          horizontalFieldOfView: feature.attributes.horizontal_field_of_view,
+          verticalFieldOfView: feature.attributes.vertical_field_of_view_
         });
         viewsheds.push(viewshed);
       });
@@ -121,7 +127,7 @@ query.returnGeometry = true;
       console.log(viewshedAnalysis)
       view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
         // analysisView.interactive = true;
-        analysisView.selectedViewshed = viewsheds[0]; // Set default viewshed
+        analysisView.selectedViewshed = viewsheds[0];
         analysisView.visible = true;
       });
     });
@@ -134,7 +140,7 @@ query.returnGeometry = true;
     const layerListExpand = new Expand({
       view: view,
       content: layerListWidget,
-      expandIconClass: "esri-icon-layer-list", // Icon for the expand button
+      expandIconClass: "esri-icon-layer-list",
       expandTooltip: "Layer List"
     });
 
@@ -211,18 +217,7 @@ query.returnGeometry = true;
           });
         }
     
-        // If no viewsheds are selected, display all viewsheds
-
-        // feature off
-        // if (selectedViewsheds.size === 0) {
-        //   viewshedAnalysis.viewsheds = viewsheds;
-        //   view.goTo({
-        //     scale: 3000
-        //   });
-        // }
-    
-        updateButtonState();  // Update the button state after selection
-        console.log(`Selected viewsheds count: ${selectedViewsheds.size}`); // Debug log
+        updateButtonState(); 
       }
     };
     
@@ -230,12 +225,12 @@ query.returnGeometry = true;
     document.getElementById("toggleViewsheds").addEventListener("click", toggleViewsheds);
 
     const convertFeatureSetToRows = (response) => {
-      listNode.innerHTML = ""; // Clear the list before adding new items
+      listNode.innerHTML = "";
     
       const graphics = response.features;
       graphics.forEach((result, index) => {
         const attributes = result.attributes;
-        const name = attributes.devicename;
+        const name = attributes.camera_device_name;
     
         // Create a list item
         const item = document.createElement("calcite-list-item");
@@ -249,13 +244,13 @@ query.returnGeometry = true;
     
         const videoIcon = document.createElement("calcite-icon");
         videoIcon.setAttribute("icon", "video");
-        videoIcon.setAttribute("scale", "s"); // Set the scale to small
+        videoIcon.setAttribute("scale", "s");
 
-        actionIcon.appendChild(videoIcon); // Add the video icon to the action
+        actionIcon.appendChild(videoIcon); 
     
         //Add an event listener to the action icon to show the popup
         actionIcon.addEventListener("click", (event) => {
-          event.stopPropagation(); // Prevent triggering the list item click event
+          event.stopPropagation();
           showPopup(result.geometry, attributes, true);
         });
     
@@ -268,17 +263,15 @@ query.returnGeometry = true;
         item.addEventListener("click", onCameraClickHandler);
       });
     };
-    
-    const iFrameUrl = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=43.421&lon=-110.789"
-    
-    // "http://10.64.152.142/";
 
+    //const iFrameUrl = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=40.772&lon=-111.868"
+    
     const showPopup = (geometry, attributes, shouldZoom = false) => {
       // Create a calcite-card element
       const card = document.createElement("calcite-card");
     
       // Set the title and subtitle
-      card.setAttribute("heading", attributes.devicename);
+      card.setAttribute("heading", attributes.camera_device_name);
       card.setAttribute("subheading", "Camera Details");
     
       // Create a div to hold the attribute information
@@ -287,34 +280,65 @@ query.returnGeometry = true;
     
       // Add attribute details as paragraphs
       const cameraHeading = document.createElement("p");
-      cameraHeading.textContent = `Camera Heading: ${attributes.cameraheading}`;
+      cameraHeading.textContent = `Camera Heading: ${attributes.camera_heading}`;
       attributesDiv.appendChild(cameraHeading);
     
       const horizontalFOV = document.createElement("p");
-      horizontalFOV.textContent = `Horizontal Field of View: ${attributes.horizontalfieldofview_viewshed_}`;
+      horizontalFOV.textContent = `Horizontal Field of View: ${attributes.horizontal_field_of_view}`;
       attributesDiv.appendChild(horizontalFOV);
     
       const verticalFOV = document.createElement("p");
-      verticalFOV.textContent = `Vertical Field of View: ${attributes.verticalfieldofview}`;
+      verticalFOV.textContent = `Vertical Field of View: ${attributes.vertical_field_of_view_}`;
       attributesDiv.appendChild(verticalFOV);
     
       const cameraHeight = document.createElement("p");
-      cameraHeight.textContent = `Camera Height: ${attributes.locationheight}`;
+      cameraHeight.textContent = `Camera Height: ${attributes.camera_height_off_ground_m}`;
       attributesDiv.appendChild(cameraHeight);
     
       // Append the attributes div to the card
       card.appendChild(attributesDiv);
     
+      const cameraLink = document.createElement("p");
+
+      const link = document.createElement("a");
+      link.textContent = "View Camera";
+      link.href = attributes.ip_url;
+      
+      link.style.color = "orange";
+      link.style.fontWeight = "bold";
+      link.style.fontSize = "14px";
+
+
+      // Add a click event listener to open in a small popup
+      link.addEventListener("click", (event) => {
+        event.preventDefault(); 
+      
+        const popupWidth = 600;
+        const popupHeight = 400;
+        const left = (window.innerWidth / 2) - (popupWidth / 2);
+        const top = (window.innerHeight / 2) - (popupHeight / 2);
+      
+        // Open the popup window with specified size and position
+        window.open(link.href, "CameraPopup", `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`);
+      });
+      
+      // Append the link to the paragraph and then to the attributesDiv
+      cameraLink.appendChild(link);
+      attributesDiv.appendChild(cameraLink);
+      
       // Create the iframe element
-      const iframe = document.createElement("iframe");
-      iframe.height = "250"; // Adjust height as needed
-      iframe.src = attributes.IP;
-      iframe.style.width = "100%"; // Make the iframe take the full width of the card
-      iframe.setAttribute("frameborder", "0");
-    
+      // const iframe = document.createElement("iframe");
+      // iframe.height = "250"; // Adjust height as needed
+      // iframe.src = iFrameUrl;
+      // iframe.style.width = "100%"; // Make the iframe take the full width of the card
+      // iframe.setAttribute("frameborder", "0");
+      // //iframe.setAttribute("referrerpolicy", "unsafe-url");
+      // iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-top-navigation");
+      // //iframe.setAttribute("allow", "autoplay; camera; microphone");
+     
       // Create a content div and add the iframe to it
       const contentDiv = document.createElement("div");
-      contentDiv.appendChild(iframe);
+    //  contentDiv.appendChild(iframe);
     
       // Append the content div to the card
       card.appendChild(contentDiv);
@@ -330,9 +354,9 @@ query.returnGeometry = true;
       view.popup.alignment = "bottom-right"; 
       view.popup.dockEnabled = true; 
       view.popup.dockOptions = {
-        buttonEnabled: false, // Hide the dock button
+        buttonEnabled: false,
         breakpoint: false,   
-        position: "bottom-right" // Pin the popup to the bottom-right corner
+        position: "bottom-right"
       };
 
       // Append the card directly to the popup's content element
@@ -340,7 +364,7 @@ query.returnGeometry = true;
 
       // Open the popup and directly append the card element
       view.openPopup({
-        title: attributes.devicename, // Still show the title in the popup header
+        title: attributes.devicename,
         location: geometry,
       });
     
