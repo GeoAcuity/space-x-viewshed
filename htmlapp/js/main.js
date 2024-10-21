@@ -118,7 +118,7 @@ query.returnGeometry = true;
           // print result
           // result.geometry.points.forEach(function (point, index) {
           const elevation = Math.round(result.geometry.points[0][2]);
-          console.log(elevation);
+          // console.log(elevation);
         
           const viewshed = new Viewshed({
             observer: {
@@ -222,7 +222,7 @@ query.returnGeometry = true;
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
     
       if (selectedViewshed) {
-        view.popup.close();
+        view.closePopup();
     
         const wasSelected = selectedViewsheds.has(selectedViewshed);
     
