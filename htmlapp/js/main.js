@@ -356,13 +356,6 @@ query.returnGeometry = true;
       // attributesDiv.style.padding = "10px"; // Optional styling for spacing
     
       // Add attribute details as paragraphs
-      const cameraName = document.createElement("p");
-      cameraName.textContent = `${attributes.camera_device_name}`;
-      attributesDiv.appendChild(cameraName);
-
-      // cameraName.style.color = "orange";
-      cameraName.style.fontWeight = "bold";
-      cameraName.style.fontSize = "22px";
 
       const cameraHeading = document.createElement("p");
       cameraHeading.textContent = `Camera Heading: ${attributes.camera_heading}`;
@@ -410,16 +403,6 @@ query.returnGeometry = true;
       // Append the link to the paragraph and then to the attributesDiv
       cameraLink.appendChild(link);
       attributesDiv.appendChild(cameraLink);
-      
-      // Create the iframe element
-      // const iframe = document.createElement("iframe");
-      // iframe.height = "250"; // Adjust height as needed
-      // iframe.src = iFrameUrl;
-      // iframe.style.width = "100%"; // Make the iframe take the full width of the card
-      // iframe.setAttribute("frameborder", "0");
-      // //iframe.setAttribute("referrerpolicy", "unsafe-url");
-      // iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-top-navigation");
-      // //iframe.setAttribute("allow", "autoplay; camera; microphone");
      
       // Create a content div and add the iframe to it
       const contentDiv = document.createElement("div");
@@ -449,7 +432,7 @@ query.returnGeometry = true;
 
       // Open the popup and directly append the card element
       view.openPopup({
-        title: attributes.devicename,
+        title: attributes.camera_device_name,
         location: geometry,
       });
     
