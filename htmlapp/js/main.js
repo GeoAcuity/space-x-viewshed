@@ -342,83 +342,50 @@ query.returnGeometry = true;
     //const iFrameUrl = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=40.772&lon=-111.868"
     
     const showPopup = (geometry, attributes, shouldZoom = false) => {
+      // Create a div to hold the content
+      const contentDiv = document.createElement("div");
       
-       
-      // Create a calcite-card element
-      const card = document.createElement("calcite-card");
-    
-      // Set the title and subtitle
-      card.setAttribute("heading", attributes.camera_device_name);
-      // card.setAttribute("subheading", "Camera Details");
-    
-      // Create a div to hold the attribute information
-      const attributesDiv = document.createElement("div");
-      // attributesDiv.style.padding = "10px"; // Optional styling for spacing
-    
-      // Add attribute details as paragraphs
-
       const cameraHeading = document.createElement("p");
       cameraHeading.textContent = `Camera Heading: ${attributes.camera_heading}`;
-      attributesDiv.appendChild(cameraHeading);
-    
+      contentDiv.appendChild(cameraHeading);
+      
       const horizontalFOV = document.createElement("p");
       horizontalFOV.textContent = `Horizontal Field of View: ${attributes.horizontal_field_of_view}`;
-      attributesDiv.appendChild(horizontalFOV);
-    
+      contentDiv.appendChild(horizontalFOV);
+      
       const verticalFOV = document.createElement("p");
       verticalFOV.textContent = `Vertical Field of View: ${attributes.vertical_field_of_view_}`;
-      attributesDiv.appendChild(verticalFOV);
-    
+      contentDiv.appendChild(verticalFOV);
+      
       const cameraHeight = document.createElement("p");
       cameraHeight.textContent = `Camera Height: ${attributes.camera_height_off_ground_m}`;
-      attributesDiv.appendChild(cameraHeight);
-    
-      // Append the attributes div to the card
-      card.appendChild(attributesDiv);
-    
+      contentDiv.appendChild(cameraHeight);
+      
       const cameraLink = document.createElement("p");
-
       const link = document.createElement("a");
-      link.textContent = "View Live Camera Feed";
+      link.textContent = "View Camera";
       link.href = attributes.ip_url;
       
       link.style.color = "orange";
       link.style.fontWeight = "bold";
-      link.style.fontSize = "16px";
+      link.style.fontSize = "14px";
+    
 
-
-      // Add a click event listener to open in a small popup
       link.addEventListener("click", (event) => {
         event.preventDefault(); 
-      
+    
         const popupWidth = 600;
         const popupHeight = 400;
         const left = (window.innerWidth / 2) - (popupWidth / 2);
         const top = (window.innerHeight / 2) - (popupHeight / 2);
-      
-        // Open the popup window with specified size and position
+        
         window.open(link.href, "CameraPopup", `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`);
       });
       
-      // Append the link to the paragraph and then to the attributesDiv
       cameraLink.appendChild(link);
-      attributesDiv.appendChild(cameraLink);
-     
-      // Create a content div and add the iframe to it
-      const contentDiv = document.createElement("div");
-    //  contentDiv.appendChild(iframe);
-    
-      // Append the content div to the card
-      card.appendChild(contentDiv);
-    
-      // Optional: Add actions or additional information to the card
-      const actionIcon = document.createElement("calcite-action");
-      actionIcon.setAttribute("slot", "actions-end");
-      actionIcon.setAttribute("icon", "video");
-      actionIcon.setAttribute("text", "View Camera");
-    
-      card.appendChild(actionIcon);
-    
+      contentDiv.appendChild(cameraLink);
+      
+      view.popup.content = contentDiv;
       view.popup.alignment = "bottom-right"; 
       view.popup.dockEnabled = true; 
       view.popup.dockOptions = {
@@ -426,26 +393,21 @@ query.returnGeometry = true;
         breakpoint: false,   
         position: "bottom-right"
       };
-
-      // Append the card directly to the popup's content element
-      view.popup.content = card;
-
-      // Open the popup and directly append the card element
+    
       view.openPopup({
         title: attributes.camera_device_name,
         location: geometry,
       });
-    
-   // Zoom to the camera location
-   if (shouldZoom) {
-    view.goTo({
-      target: geometry,
-      scale: 800
-    }).catch((error) => {
-      if (error.name !== "AbortError") {
-        console.error(error);
+      
+      if (shouldZoom) {
+        view.goTo({
+          target: geometry,
+          scale: 800
+        }).catch((error) => {
+          if (error.name !== "AbortError") {
+            console.error(error);
+          }
+        });
       }
-    });
-  }
-};
+    };
 });
