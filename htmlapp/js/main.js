@@ -13,7 +13,10 @@ require([
   "esri/layers/GraphicsLayer",
   "esri/symbols/SimpleMarkerSymbol",
   "esri/layers/ElevationLayer",
-], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer) {
+  "esri/geometry/Point",
+  "esri/geometry/Multipoint",
+  "esri/core/promiseUtils"
+], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer, Point, Multipoint, promiseUtils) {
 
     let viewsheds = [];
     let selectedViewsheds = new Set(); 
@@ -22,11 +25,7 @@ require([
     let areViewshedsVisible = false; 
     const listNode = document.getElementById("cameraList");
 
-    const elevationLayer = new ElevationLayer({
-      url: "https://elevation.arcgis.com/arcgis/rest/services/WorldElevation/EPD/GPServer"
-    });
-
-    const featureLayer = new FeatureLayer({
+    const cameraLayer = new FeatureLayer({
       url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
       elevationInfo: {
         mode: "relative-to-ground",
@@ -35,6 +34,7 @@ require([
         },
         unit: "meters"
       },
+      title: "Bastrop Camera Locations",
       popupTemplate: {
         title: "{camera_device_name}{camera_heading}{horizontal_field_of_view}{vertical_field_of_view_}{camera_height_off_ground_m}{ip_url}",
         content: 
@@ -54,6 +54,47 @@ require([
       }
     });
 
+    const incidentLayer = new FeatureLayer({
+      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Exterior_Cameras/FeatureServer",
+      title: "Incident Reporting",
+      elevationInfo: {
+        mode: "on-the-ground",
+      },
+      popupTemplate: {
+        title: "Incident: {devicename}",
+        content: [
+          {
+            // It is also possible to set the fieldInfos outside of the content
+            // directly in the popupTemplate. If no fieldInfos is specifically set
+            // in the content, it defaults to whatever may be set within the popupTemplate.
+            type: "fields",
+            fieldInfos: [
+              {
+                fieldName: "cameraheading",
+                label: "Heading:"
+              },
+              {
+                fieldName: "horizontalfieldofview",
+                label: "H FOV:"
+              },
+            ]
+          }
+        ]
+      }
+    });
+    // Create elevation layers
+    const WorldElevationLayer = new ElevationLayer({
+      url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+    });
+    const meshLayer = new IntegratedMeshLayer({
+      url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
+      title: "Bastrop Factory Mesh",
+      elevationInfo: {
+        mode: "absolute-height",
+        offset: 9
+      }
+    });
+
     const view = new SceneView({
       container: "viewDiv",
       camera: {
@@ -70,17 +111,34 @@ require([
         ground: "world-elevation",
 
         layers: [
-          new IntegratedMeshLayer({
-            url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
-            elevationInfo: {
-              mode: "absolute-height",
-              offset: 9
-            }
-          }),
-          featureLayer
+          meshLayer,
+          cameraLayer,
+          incidentLayer
         ]
       }),
 
+    });
+
+    // Wait for the scene layer to load
+    meshLayer.load().then(function() {
+    // Get the extent of the mesh layer
+    var extent = meshLayer.fullExtent;
+
+    // Create a query to filter the incidents layer
+    var query = incidentLayer.createQuery();
+    query.geometry = extent; // Set the geometry to the extent of the first layer
+    query.spatialRelationship = "intersects"; // Use "intersects" to filter
+
+    // Execute the query and update the second layer's definition expression
+    incidentLayer.queryFeatures(query).then(function(response) {
+        // Create an array of ObjectIds from the features
+        var objectIds = response.features.map(function(feature) {
+            return feature.attributes[incidentLayer.objectIdField];
+        });
+
+        // Apply a definitionExpression to filter the layer
+        incidentLayer.definitionExpression = incidentLayer.objectIdField + " IN (" + objectIds.join(", ") + ")";
+      });
     });
 
     view.when(function() {
@@ -92,34 +150,51 @@ require([
     });
 
     
-const query = featureLayer.createQuery();
+const query = cameraLayer.createQuery();
 query.returnGeometry = true;
     // Query features and create viewsheds
-    featureLayer.queryFeatures(query).then(function(response) {
+    cameraLayer.queryFeatures(query).then(function(response) {
       convertFeatureSetToRows(response);
 
       const features = response.features;
       
       features.forEach(function(feature) {
-        const viewshed = new Viewshed({
-          observer: {
-            x: feature.geometry.x,
-            y: feature.geometry.y,
-            z: feature.attributes.camera_height_off_ground_m
-          },
-          farDistance: feature.attributes.far_distance_m,
-          tilt: feature.attributes.camera_tilt,
-          heading: feature.attributes.camera_heading,
-          horizontalFieldOfView: feature.attributes.horizontal_field_of_view,
-          verticalFieldOfView: feature.attributes.vertical_field_of_view_
+        const position = feature.geometry;
+        WorldElevationLayer
+          .queryElevation(new Multipoint({ points: [[position.x, position.y]] }), {
+            returnSampleInfo: true
+        })
+        // sample points
+        .then(function (result) {
+          // print result
+          // result.geometry.points.forEach(function (point, index) {
+          const elevation = Math.round(result.geometry.points[0][2]);
+          // console.log(elevation);
+        
+          const viewshed = new Viewshed({
+            observer: {
+              x: feature.geometry.x,
+              y: feature.geometry.y,
+              z: elevation + feature.attributes.camera_height_off_ground_m
+            },
+            farDistance: feature.attributes.far_distance_m,
+            tilt: feature.attributes.camera_tilt,
+            heading: feature.attributes.camera_heading,
+            horizontalFieldOfView: feature.attributes.horizontal_field_of_view,
+            verticalFieldOfView: feature.attributes.vertical_field_of_view_
+          });
+          viewsheds.push(viewshed);
+
+
         });
-        viewsheds.push(viewshed);
+        // Initialize ViewshedAnalysis as being empty after creating viewsheds
+        viewshedAnalysis = new ViewshedAnalysis({
+          viewsheds: []
+        });
+        
       });
 
-      // Initialize ViewshedAnalysis as being empty after creating viewsheds
-      viewshedAnalysis = new ViewshedAnalysis({
-        viewsheds: []
-      });
+      
       // Have Button prompt to show viewsheds
       document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds"
 
@@ -198,7 +273,7 @@ query.returnGeometry = true;
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
     
       if (selectedViewshed) {
-        view.popup.close();
+        view.closePopup();
     
         const wasSelected = selectedViewsheds.has(selectedViewshed);
     
@@ -267,39 +342,26 @@ query.returnGeometry = true;
     //const iFrameUrl = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=default&metricTemp=default&metricWind=default&zoom=5&overlay=wind&product=ecmwf&level=surface&lat=40.772&lon=-111.868"
     
     const showPopup = (geometry, attributes, shouldZoom = false) => {
-      // Create a calcite-card element
-      const card = document.createElement("calcite-card");
-    
-      // Set the title and subtitle
-      card.setAttribute("heading", attributes.camera_device_name);
-      card.setAttribute("subheading", "Camera Details");
-    
-      // Create a div to hold the attribute information
-      const attributesDiv = document.createElement("div");
-      attributesDiv.style.padding = "10px"; // Optional styling for spacing
-    
-      // Add attribute details as paragraphs
+      // Create a div to hold the content
+      const contentDiv = document.createElement("div");
+      
       const cameraHeading = document.createElement("p");
       cameraHeading.textContent = `Camera Heading: ${attributes.camera_heading}`;
-      attributesDiv.appendChild(cameraHeading);
-    
+      contentDiv.appendChild(cameraHeading);
+      
       const horizontalFOV = document.createElement("p");
       horizontalFOV.textContent = `Horizontal Field of View: ${attributes.horizontal_field_of_view}`;
-      attributesDiv.appendChild(horizontalFOV);
-    
+      contentDiv.appendChild(horizontalFOV);
+      
       const verticalFOV = document.createElement("p");
       verticalFOV.textContent = `Vertical Field of View: ${attributes.vertical_field_of_view_}`;
-      attributesDiv.appendChild(verticalFOV);
-    
+      contentDiv.appendChild(verticalFOV);
+      
       const cameraHeight = document.createElement("p");
       cameraHeight.textContent = `Camera Height: ${attributes.camera_height_off_ground_m}`;
-      attributesDiv.appendChild(cameraHeight);
-    
-      // Append the attributes div to the card
-      card.appendChild(attributesDiv);
-    
+      contentDiv.appendChild(cameraHeight);
+      
       const cameraLink = document.createElement("p");
-
       const link = document.createElement("a");
       link.textContent = "View Camera";
       link.href = attributes.ip_url;
@@ -307,50 +369,23 @@ query.returnGeometry = true;
       link.style.color = "orange";
       link.style.fontWeight = "bold";
       link.style.fontSize = "14px";
+    
 
-
-      // Add a click event listener to open in a small popup
       link.addEventListener("click", (event) => {
         event.preventDefault(); 
-      
+    
         const popupWidth = 600;
         const popupHeight = 400;
         const left = (window.innerWidth / 2) - (popupWidth / 2);
         const top = (window.innerHeight / 2) - (popupHeight / 2);
-      
-        // Open the popup window with specified size and position
+        
         window.open(link.href, "CameraPopup", `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`);
       });
       
-      // Append the link to the paragraph and then to the attributesDiv
       cameraLink.appendChild(link);
-      attributesDiv.appendChild(cameraLink);
+      contentDiv.appendChild(cameraLink);
       
-      // Create the iframe element
-      // const iframe = document.createElement("iframe");
-      // iframe.height = "250"; // Adjust height as needed
-      // iframe.src = iFrameUrl;
-      // iframe.style.width = "100%"; // Make the iframe take the full width of the card
-      // iframe.setAttribute("frameborder", "0");
-      // //iframe.setAttribute("referrerpolicy", "unsafe-url");
-      // iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-top-navigation");
-      // //iframe.setAttribute("allow", "autoplay; camera; microphone");
-     
-      // Create a content div and add the iframe to it
-      const contentDiv = document.createElement("div");
-    //  contentDiv.appendChild(iframe);
-    
-      // Append the content div to the card
-      card.appendChild(contentDiv);
-    
-      // Optional: Add actions or additional information to the card
-      const actionIcon = document.createElement("calcite-action");
-      actionIcon.setAttribute("slot", "actions-end");
-      actionIcon.setAttribute("icon", "video");
-      actionIcon.setAttribute("text", "View Camera");
-    
-      card.appendChild(actionIcon);
-    
+      view.popup.content = contentDiv;
       view.popup.alignment = "bottom-right"; 
       view.popup.dockEnabled = true; 
       view.popup.dockOptions = {
@@ -358,26 +393,21 @@ query.returnGeometry = true;
         breakpoint: false,   
         position: "bottom-right"
       };
-
-      // Append the card directly to the popup's content element
-      view.popup.content = card;
-
-      // Open the popup and directly append the card element
+    
       view.openPopup({
-        title: attributes.devicename,
+        title: attributes.camera_device_name,
         location: geometry,
       });
-    
-   // Zoom to the camera location
-   if (shouldZoom) {
-    view.goTo({
-      target: geometry,
-      scale: 800
-    }).catch((error) => {
-      if (error.name !== "AbortError") {
-        console.error(error);
+      
+      if (shouldZoom) {
+        view.goTo({
+          target: geometry,
+          scale: 800
+        }).catch((error) => {
+          if (error.name !== "AbortError") {
+            console.error(error);
+          }
+        });
       }
-    });
-  }
-};
+    };
 });
