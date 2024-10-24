@@ -11,7 +11,7 @@ html, body {
     --calcite-color-brand: #b1b1b1;
     --calcite-color-brand-hover: #777777;
     --calcite-color-brand-press: #c5c5c5;
-    --calcite-color-background: #292929;
+    --calcite-color-background: #131313;
     --calcite-color-foreground-1: #000000;
     --calcite-color-foreground-2: #a3a3a3;
     --calcite-color-foreground-3: #b9b9b9;
@@ -68,7 +68,7 @@ html, body {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     padding: 10px;
-    background-color: #3b3b3b;
+    background-color: #181818;
     overflow-y: auto;
     height: calc(100vh - 110px);
     display: flex;

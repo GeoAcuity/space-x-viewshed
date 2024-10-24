@@ -159,23 +159,23 @@ query.returnGeometry = true;
       const features = response.features;
       
       features.forEach(function(feature) {
-        const position = feature.geometry;
-        WorldElevationLayer
-          .queryElevation(new Multipoint({ points: [[position.x, position.y]] }), {
-            returnSampleInfo: true
-        })
-        // sample points
-        .then(function (result) {
-          // print result
-          // result.geometry.points.forEach(function (point, index) {
-          const elevation = Math.round(result.geometry.points[0][2]);
+        // const position = feature.geometry;
+        // WorldElevationLayer
+        //   .queryElevation(new Multipoint({ points: [[position.x, position.y]] }), {
+        //     returnSampleInfo: true
+        // })
+        // // sample points
+        // .then(function (result) {
+        //   // print result
+        //   // result.geometry.points.forEach(function (point, index) {
+        //   const elevation = Math.round(result.geometry.points[0][2]);
           // console.log(elevation);
         
           const viewshed = new Viewshed({
             observer: {
               x: feature.geometry.x,
               y: feature.geometry.y,
-              z: elevation + feature.attributes.camera_height_off_ground_m
+              z: feature.attributes.camera_height_off_ground_m + 120// + elevation
             },
             farDistance: feature.attributes.far_distance_m,
             tilt: feature.attributes.camera_tilt,
@@ -192,7 +192,7 @@ query.returnGeometry = true;
           viewsheds: []
         });
         
-      });
+      // });
 
       
       // Have Button prompt to show viewsheds
@@ -269,10 +269,11 @@ query.returnGeometry = true;
     // Update the event listener logic when a camera is clicked
     const onCameraClickHandler = (event) => {
       const target = event.target;
+      // console.log(target)
       const resultId = target.getAttribute("value");
-      console.log(resultId)
-      console.log(parseInt(resultId, 10))
-      console.log(viewsheds)
+      // console.log(resultId)
+      // console.log(parseInt(resultId, 10))
+      // console.log(viewsheds)
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
     
       if (selectedViewshed) {
