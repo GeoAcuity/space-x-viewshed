@@ -27,7 +27,7 @@ require([
     const listNode = document.getElementById("cameraList");
 
     const cameraLayer = new FeatureLayer({
-      url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/88759b17e8184026ae90c9c092df9dac/rest/services/Bastrop_Exterior_Cameras/FeatureServer",
+      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
       elevationInfo: {
         mode: "relative-to-ground",
         featureExpressionInfo: {
