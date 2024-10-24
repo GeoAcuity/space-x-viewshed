@@ -8,14 +8,14 @@ html, body {
   }
   
   .spacex-theme {
-    --calcite-color-brand: #0C91F0;
-    --calcite-color-brand-hover: #007ac2;
-    --calcite-color-brand-press: #00619b;
-    --calcite-color-background: #005288;
-    --calcite-color-foreground-1: #003b62;
-    --calcite-color-foreground-2: #0C91F0;
-    --calcite-color-foreground-3: #007ac2;
-    --calcite-color-foreground-current: #374a33;
+    --calcite-color-brand: #b1b1b1;
+    --calcite-color-brand-hover: #777777;
+    --calcite-color-brand-press: #c5c5c5;
+    --calcite-color-background: #292929;
+    --calcite-color-foreground-1: #000000;
+    --calcite-color-foreground-2: #a3a3a3;
+    --calcite-color-foreground-3: #b9b9b9;
+    --calcite-color-foreground-current: #ffffff;
     --calcite-color-info: #2d8626;
     --calcite-color-success: #36da43;
     --calcite-color-warning: #ffc900;
@@ -25,19 +25,19 @@ html, body {
     --calcite-color-text-1: #ffffff;
     --calcite-color-text-2: #ffffff;
     --calcite-color-text-3: #ffffff;
-    --calcite-color-text-inverse: #000000;
+    --calcite-color-text-inverse: #ffffff;
     --calcite-color-text-link: #2d8626;
-    --calcite-color-border-1: #042A47;
-    --calcite-color-border-2: #042A47;
-    --calcite-color-border-3: #042A47;
-    --calcite-color-border-input: #042A47;
+    --calcite-color-border-1: #ffffff;
+    --calcite-color-border-2: #e6e6e6;
+    --calcite-color-border-3: #fffbfb;
+    --calcite-color-border-input: #c5c5c5;
     --calcite-list: blue;
     --calcite-input: purple;
 }
 
 
   .header {
-    background-color: #021524;
+    background-color: #000000;
     color: #F0F0F0;
     text-align: left;
     padding-left: 20px;
@@ -68,7 +68,7 @@ html, body {
     grid-column: 1 / 2;
     grid-row: 2 / 3;
     padding: 10px;
-    background-color: #042A47;
+    background-color: #3b3b3b;
     overflow-y: auto;
     height: calc(100vh - 110px);
     display: flex;
@@ -112,11 +112,11 @@ html, body {
     width: 100%; /* Full width */
     height: 100%; /* Full height */
     overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    background-color: rgba(255, 255, 255, 0.4); /* Black w/ opacity */
   }
 
   .modal-content {
-    background-color: #fefefe;
+    background-color: #1a1a1a;
     margin: 15% auto; /* 15% from the top and centered */
     padding: 20px;
     border: 1px solid #888;
@@ -132,7 +132,7 @@ html, body {
 
   .close:hover,
   .close:focus {
-    color: black;
+    color: rgb(173, 171, 171);
     text-decoration: none;
     cursor: pointer;
   }

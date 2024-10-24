@@ -270,6 +270,9 @@ query.returnGeometry = true;
     const onCameraClickHandler = (event) => {
       const target = event.target;
       const resultId = target.getAttribute("value");
+      console.log(resultId)
+      console.log(parseInt(resultId, 10))
+      console.log(viewsheds)
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
     
       if (selectedViewshed) {
