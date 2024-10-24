@@ -27,7 +27,7 @@ require([
     const listNode = document.getElementById("cameraList");
 
     const cameraLayer = new FeatureLayer({
-      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
+      url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/88759b17e8184026ae90c9c092df9dac/rest/services/Bastrop_Exterior_Cameras/FeatureServer",
       elevationInfo: {
         mode: "relative-to-ground",
         featureExpressionInfo: {
@@ -56,31 +56,31 @@ require([
     });
 
     const incidentLayer = new FeatureLayer({
-      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Exterior_Cameras/FeatureServer",
+      url: "https://ht-arcgis-app01.spacex.corp/server/rest/services/Hosted/service_e634e21092674f1ba7e243ab7200ce78/FeatureServer  ",
       title: "Incident Reporting",
       elevationInfo: {
         mode: "on-the-ground",
       },
       popupTemplate: {
-        title: "Incident: {devicename}",
-        content: [
-          {
-            // It is also possible to set the fieldInfos outside of the content
-            // directly in the popupTemplate. If no fieldInfos is specifically set
-            // in the content, it defaults to whatever may be set within the popupTemplate.
-            type: "fields",
-            fieldInfos: [
-              {
-                fieldName: "cameraheading",
-                label: "Heading:"
-              },
-              {
-                fieldName: "horizontalfieldofview",
-                label: "H FOV:"
-              },
-            ]
-          }
-        ]
+        title: "Incident",
+        // content: [
+        //   {
+        //     // It is also possible to set the fieldInfos outside of the content
+        //     // directly in the popupTemplate. If no fieldInfos is specifically set
+        //     // in the content, it defaults to whatever may be set within the popupTemplate.
+        //     // type: "fields",
+        //     // fieldInfos: [
+        //     //   {
+        //     //     fieldName: "cameraheading",
+        //     //     label: "Heading:"
+        //     //   },
+        //     //   {
+        //     //     fieldName: "horizontalfieldofview",
+        //     //     label: "H FOV:"
+        //     //   },
+        //     ]
+        //   }
+        // ]
       }
     });
     // Create elevation layers
@@ -88,7 +88,7 @@ require([
       url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
     });
     const meshLayer = new IntegratedMeshLayer({
-      url: "https://tiles.arcgis.com/tiles/pr9h1zugi5DEn134/arcgis/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
+      url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/b45505e6448945c1bc31cdae21ddd602/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
       title: "Bastrop Factory Mesh",
       elevationInfo: {
         mode: "absolute-height",
