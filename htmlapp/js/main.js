@@ -27,7 +27,7 @@ require([
     const listNode = document.getElementById("cameraList");
 
     const cameraLayer = new FeatureLayer({
-      url: "https://services9.arcgis.com/pr9h1zugi5DEn134/arcgis/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
+      url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/54e68bd6789644a9a027722d69d60b91/rest/services/survey123_bb295afa11d447ceb080c4513cc00856_results/FeatureServer/0",
       elevationInfo: {
         mode: "relative-to-ground",
         featureExpressionInfo: {
