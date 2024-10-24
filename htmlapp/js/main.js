@@ -16,9 +16,10 @@ require([
   "esri/geometry/Point",
   "esri/geometry/Multipoint",
   "esri/core/promiseUtils"
-], function(Map, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer, Point, Multipoint, promiseUtils) {
+], function(EsriMap, SceneView, SpatialReference, ViewshedAnalysis, Viewshed, IntegratedMeshLayer, FeatureLayer, LayerList, Expand, reactiveUtils,Graphic, GraphicsLayer, SimpleMarkerSymbol, ElevationLayer, Point, Multipoint, promiseUtils) {
 
     let viewsheds = [];
+    const viewshedMap = new Map();
     let selectedViewsheds = new Set(); 
     selectedViewsheds.clear();  
     let viewshedAnalysis;
@@ -106,7 +107,7 @@ require([
         heading: 1.2311944909542853,
         tilt: 45
       },
-      map: new Map({
+      map: new EsriMap({
         basemap: "satellite",
         ground: "world-elevation",
 
@@ -155,27 +156,16 @@ query.returnGeometry = true;
     // Query features and create viewsheds
     cameraLayer.queryFeatures(query).then(function(response) {
       convertFeatureSetToRows(response);
-
-      const features = response.features;
       
+      const features = response.features;
       features.forEach(function(feature) {
-        // const position = feature.geometry;
-        // WorldElevationLayer
-        //   .queryElevation(new Multipoint({ points: [[position.x, position.y]] }), {
-        //     returnSampleInfo: true
-        // })
-        // // sample points
-        // .then(function (result) {
-        //   // print result
-        //   // result.geometry.points.forEach(function (point, index) {
-        //   const elevation = Math.round(result.geometry.points[0][2]);
-          // console.log(elevation);
+        const elevation = 119 // set for Bastrop Esri World Elevation value
         
           const viewshed = new Viewshed({
             observer: {
               x: feature.geometry.x,
               y: feature.geometry.y,
-              z: feature.attributes.camera_height_off_ground_m + 120// + elevation
+              z: feature.attributes.camera_height_off_ground_m  + elevation
             },
             farDistance: feature.attributes.far_distance_m,
             tilt: feature.attributes.camera_tilt,
@@ -185,21 +175,20 @@ query.returnGeometry = true;
           });
           viewsheds.push(viewshed);
 
-
         });
         // Initialize ViewshedAnalysis as being empty after creating viewsheds
         viewshedAnalysis = new ViewshedAnalysis({
           viewsheds: []
-        });
+        // });
+
         
-      // });
+      });
 
       
       // Have Button prompt to show viewsheds
       document.getElementById("toggleViewsheds").innerText = "Show All Viewsheds"
 
       view.analyses.add(viewshedAnalysis);
-      console.log(viewshedAnalysis)
       view.whenAnalysisView(viewshedAnalysis).then(analysisView => {
         // analysisView.interactive = true;
         analysisView.selectedViewshed = viewsheds[0];
@@ -268,12 +257,10 @@ query.returnGeometry = true;
     
     // Update the event listener logic when a camera is clicked
     const onCameraClickHandler = (event) => {
+      console.log(viewshedMap)
       const target = event.target;
-      // console.log(target)
       const resultId = target.getAttribute("value");
-      // console.log(resultId)
-      // console.log(parseInt(resultId, 10))
-      // console.log(viewsheds)
+
       const selectedViewshed = viewsheds[parseInt(resultId, 10)];
     
       if (selectedViewshed) {
