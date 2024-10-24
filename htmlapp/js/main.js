@@ -84,9 +84,9 @@ require([
       }
     });
     // Create elevation layers
-    const WorldElevationLayer = new ElevationLayer({
-      url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-    });
+    // const WorldElevationLayer = new ElevationLayer({
+    //   url: "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+    // });
     const meshLayer = new IntegratedMeshLayer({
       url: "https://ht-arcgis-app01.spacex.corp/arcgis/sharing/servers/b45505e6448945c1bc31cdae21ddd602/rest/services/Bastrop_Factory_3D_3D_Mesh_Clip/SceneServer",
       title: "Bastrop Factory Mesh",
